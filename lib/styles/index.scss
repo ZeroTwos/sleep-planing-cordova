@@ -1,0 +1,14 @@
+@import 'animations/animations';
+@import 'bulma/bulma';
+@import 'partials/bulmavars';
+html {
+	font-size: 14px
+}
+
+.part:not(:last-child) {
+	margin-bottom: 1.75rem;
+}
+
+@import 'partials/helpers';
+@import 'partials/custom';
+@import 'partials/editor';

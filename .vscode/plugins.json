@@ -1,0 +1,1 @@
+{"plugins":["cordova-plugin-whitelist","phonegap-plugin-mobile-accessibility","cordova-plugin-device","cordova-plugin-network-information","cordova-plugin-badge","de.appplant.cordova.plugin.local-notification","cordova-plugin-app-event","cordova-plugin-intent-action"]}

@@ -1,0 +1,14 @@
+npm-debug.log
+node_modules
+www/bundle
+platforms
+plugins
+
+# Mac
+.DS_Store
+
+# iOS
+*.xcuserdatad
+
+# res
+resources/signing
