@@ -272,25 +272,24 @@ export default class Editor extends Component {
     renderNapchartUrlDialog = () => {
         let napchartUrl = `http://napchart.com/${this.state.chartId}`
         return (
-            <Ons.Dialog
-                isOpen={this.state.napchartUrlDialogShown}
-                isCancelable={true}
-                onCancel={this.hideNapchartUrlDialog}>
-                <div style={{textAlign: 'center', margin: '20px'}}>
-                    <p style={{opacity: 0.5}}>Napchart url!</p>
-                    <p>
+                <Ons.AlertDialog
+                    isOpen={this.state.napchartUrlDialogShown}
+                    isCancelable={true}
+                    onCancel={this.hideNapchartUrlDialog}>
+                    <div className='alert-dialog-title'>Napchart URL</div>
+                    <div className='alert-dialog-content'>
                         <Ons.Input
                             underbar
                             transparent
                             value={napchartUrl}
-                            disabled={true}
                         />
-                    </p>
-                    <p>
-                        <button onClick={this.hideNapchartUrlDialog} className='alert-dialog-button'>Close</button>
-                    </p>
-                </div>
-            </Ons.Dialog>)
+                    </div>
+                    <div className='alert-dialog-footer'>
+                        <button onClick={this.hideNapchartUrlDialog} className='alert-dialog-button'>
+                            Ok
+                        </button>
+                    </div>
+                </Ons.AlertDialog>)
     }
 
     shareNapChartUrl = () => {
@@ -460,7 +459,6 @@ export default class Editor extends Component {
         this.state.napchart.data.elements.forEach(element => {
             cordova.exec(sucess, fail, 'setalarm', 'coolMethod', [Math.floor(element.start / 60), element.start % 60]);
             cordova.exec(sucess, fail, 'setalarm', 'coolMethod', [Math.floor(element.end / 60), element.end % 60]);
-
         });
     }
 

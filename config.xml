@@ -9,6 +9,7 @@
     </author>
     <icon src="res/icon.png" />
     <content src="index.html" />
+    <preference name="Orientation" value="portrait" />
     <access origin="*" />
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
@@ -18,13 +19,12 @@
     <allow-intent href="geo:*" />
     <platform name="android">
         <icon src="res/icon.png" />
+        <uses-permission android:name="android.permission.INTERNET" />
         <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
         <allow-intent href="market:*" />
     </platform>
     <config-file mode="merge" parent="/*" target="AndroidManifest.xml">
         <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
-        <uses-feature android:name="android.hardware.camera" />
-        <uses-feature android:name="android.hardware.camera.autofocus" />
     </config-file>
     <platform name="ios">
         <allow-intent href="itms:*" />
