@@ -55,7 +55,8 @@
     "axios": "^0.18.0",
     "babel-polyfill": "^6.26.0",
     "classnames": "^2.2.5",
-    "cordova-android": "^6.2.3",
+    "cordova-android": "^6.4.0",
+    "cordova-android-support-gradle-release": "^1.4.2",
     "cordova-ios": "^4.5.4",
     "cordova-plugin-app-event": "^1.2.1",
     "cordova-plugin-device": "git+https://github.com/apache/cordova-plugin-device.git",
@@ -84,7 +85,10 @@
       "de.appplant.cordova.plugin.local-notification": {},
       "cordova-plugin-intent-action": {},
       "zerotwos.setalarm": {},
-      "cordova-plugin-x-socialsharing": {}
+      "cordova-plugin-x-socialsharing": {},
+      "cordova-android-support-gradle-release": {
+        "ANDROID_SUPPORT_VERSION": "27.+"
+      }
     },
     "platforms": [
       "ios",
