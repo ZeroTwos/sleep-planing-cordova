@@ -58,7 +58,6 @@
     "cordova-android": "^6.4.0",
     "cordova-android-support-gradle-release": "^1.4.2",
     "cordova-ios": "^4.5.4",
-    "cordova-plugin-app-event": "^1.2.1",
     "cordova-plugin-device": "git+https://github.com/apache/cordova-plugin-device.git",
     "cordova-plugin-intent-action": "git+https://github.com/ngocdaothanh/cordova-plugin-intent-action.git",
     "cordova-plugin-local-notifications": "^1.0.0",

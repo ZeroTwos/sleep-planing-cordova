@@ -15,13 +15,15 @@ import axios from "axios/index";
 
 export default class Editor extends Component {
     constructor(props) {
-        super(props)
+        super(props);
 
         this.state = {
             napchart: false, // until it is initialized
+            canvas: false,
+            isNapchartUpdated: false,
             ampm: this.getAmpm(),
             selectedControl: 0,
-            toastShown: false,
+            loadingModalShown: false,
             napchartUrlDialogShown: false,
             settingDialogShown: false,
             aboutDialogShown: false,
@@ -140,13 +142,13 @@ export default class Editor extends Component {
                 <Ons.ListItem>
                     <div className='center'>
                         Free and open source at :
-                        <a href={"https://github.com/ZeroTwos/sleep-planing-cordova"}>https://github.com/ZeroTwos/sleep-planing-cordova</a>
+                        <a href={"https://github.com/ZeroTwos/sleep-planing-cordova"}>sleep-planing-cordova</a>
                     </div>
                 </Ons.ListItem>
                 <Ons.ListItem>
                     <div className='center'>
                         <p>Made possible thanks to larskarbo's napchart and napchart-website</p>
-                        <p>Checkout his github : <a href={"https://github.com/larskarbo"}>https://github.com/larskarbo</a></p>
+                        <p>Checkout his github : <a href={"https://github.com/larskarbo"}>larskarbo</a></p>
                     </div>
                 </Ons.ListItem>
                 <p></p>
@@ -158,6 +160,25 @@ export default class Editor extends Component {
                 </button>
             </div>
         </Ons.AlertDialog>)
+    }
+
+    renderLoadingModal = () => {
+        return (<Ons.Modal
+            isOpen={this.state.loadingModalShown}>
+            <Ons.ProgressCircular indeterminate />
+        </Ons.Modal>)
+    }
+
+    showLoadingModal = () => {
+        this.setState({
+            loadingModalShown: true
+        })
+    }
+
+    closeLoadingModal = () => {
+        this.setState({
+            loadingModalShown: false
+        })
     }
 
     handleChange = (e) => {
@@ -189,10 +210,17 @@ export default class Editor extends Component {
     };
 
     loadFromNapChart = (url) => {
+        //No network connection
+        if(this.checkConnection() === false){
+            ons.notification.alert('Oh internet connection avaiable!');
+            return false;
+        }
+
         ons.notification.prompt("Enter napchart url or id : ", {
             cancelable: true,
             title: "Load from napchart"
         }).then((response) => {
+            this.showLoadingModal();
             let chartId = "";
             //Get the chart id from url
             if (response.length === 5) {
@@ -214,18 +242,28 @@ export default class Editor extends Component {
                             chartId: chartId
                         })
                     } else {
+                        this.closeLoadingModal();
                         ons.notification.alert("Data is empty. Maybe wrong chartId or url");
                     }
-
+                    this.closeLoadingModal();
                     ons.notification.toast("Load data from napchart successful", {timeout: 1000});
                     console.log(data);
                 })
-                .catch(error => ons.notification.alert("Can't get data from napchart"))
+                .catch(error => {
+                    this.closeLoadingModal();
+                    ons.notification.alert("Can't get data from napchart")
+                })
 
         })
     }
 
-    saveDataToNapchart = () => {
+    saveDataToNapchart = (showUrl = true, callBack = () => {}) => {
+        //No network connection
+        if(this.checkConnection() === false){
+            ons.notification.alert('Oh internet connection avaiable!');
+            return false;
+        }
+
         var dataForDatabase = {
             metaInfo: {
                 title: this.state.title,
@@ -235,7 +273,8 @@ export default class Editor extends Component {
                 ...this.state.napchart.data
             }
         }
-        console.log(dataForDatabase)
+        console.log(dataForDatabase);
+        this.showLoadingModal();
         axios.post('http://napchart.com/api/create', {
             data: JSON.stringify(dataForDatabase)
         })
@@ -244,16 +283,22 @@ export default class Editor extends Component {
                 var chartid = response.data.id
 
                 this.setState({
-                    chartId: chartid
+                    chartId: chartid,
+                    isNapchartUpdated: true,
                 });
-                this.openNapchartUrlDialog();
-                ons.notification.toast('Save chart successful', {timeout: 1000}).then(response =>
-                    this.openNapchartUrlDialog()
-                )
+                this.closeLoadingModal();
+                ons.notification.toast('Save chart successful', {timeout: 1000}).then(response =>{
+                    if(showUrl){
+                        this.openNapchartUrlDialog()
+                    }
+                })
+                callBack(chartid);
             })
-            .catch((hm) => {
-                console.error('oh no!:', hm)
+            .catch((error) => {
+                this.closeLoadingModal();
+                console.error('oh no!:', error)
                 ons.notification.alert('Oh no!:. Something wrong!')
+                return false;
             })
     }
 
@@ -294,21 +339,39 @@ export default class Editor extends Component {
 
     shareNapChartUrl = () => {
         if (this.state.chartId === undefined) {
-            ons.notification.confirm(<div>
+            console.log("Share undefined");
+            ons.notification.confirm({messageHTML : `<div>
                 <p>You must save your chart data to Napchart before sharing</p>
-                <p>Do you want to save now ? </p>
-            </div>, {timeout: 1000}).then(response => {
+                <p>Do you want to save now ?</p>
+            </div>`}).then(response => {
                 //OK button
                 if(response === 1){
-                    this.saveDataToNapchart();
-                    this.shareUrl(`http://napchart.com/${this.state.chartId}`)
+                    let shareResult = this.saveDataToNapchart(false, (chartid) => {this.shareUrl(`http://napchart.com/${chartid}`)});
                 }
-            })
+            }).catch((error) => {console.log(error)})
         } else {
-            this.shareUrl(`http://napchart.com/${this.state.chartId}`);
-        }
-        // this is the complete list of currently supported params you can pass to the plugin (all optional)
+            if(this.state.isNapchartUpdated === true) {
+                console.log("Share successful");
+                this.shareUrl(`http://napchart.com/${this.state.chartId}`);
+            }
+            else {
+                console.log("Share not updated");
+                ons.notification.confirm({messageHTML : `<div>
+                    <p>Your chart have changed</p>
+                    <p>Do you want to share the new one ? </p>
+                </div>`}).then(response => {
+                    //OK button
+                    if(response === 1){
+                        let shareResult = this.saveDataToNapchart(false, (chartid) => {this.shareUrl(`http://napchart.com/${chartid}`)});
+                    }
+                    else
+                    {
+                        this.shareUrl(`http://napchart.com/${this.state.chartId}`)
+                    }
 
+                }).catch(error => console.log(error))
+            }
+        }
     }
 
     shareUrl = (url) => {
@@ -330,6 +393,7 @@ export default class Editor extends Component {
         window.plugins.socialsharing.shareWithOptions(options, onSuccess, onError);
     }
 
+
     clearChartData = () => {
         ons.notification.confirm("Do you want to clear chart data ?").then(response => {
             if(response === 1){
@@ -348,34 +412,33 @@ export default class Editor extends Component {
             <Schedule napchart={this.state.napchart}/>
         ];
 
-        {/*<Shapes napchart={this.state.napchart}/>*/
-        }
-
-
         return (
             <Ons.Splitter>
                 <Ons.SplitterSide side='right' width={220} collapse={true} swipeable={true} isOpen={this.state.menuShown} onClose={this.closeMenu} onOpen={this.showMenu}>
                     <Ons.Page>
                         <Ons.List>
-                            <Ons.ListItem tappable onClick={() => {this.closeMenu(); this.loadFromNapChart()}}><Ons.Icon fixedWidth size="25" icon='md-cloud-download'></Ons.Icon>Load from napchart</Ons.ListItem>
-                            <Ons.ListItem tappable onClick={() => {this.closeMenu(); this.saveSchedule()}}><Ons.Icon fixedWidth size="25" icon='md-floppy'></Ons.Icon>Save</Ons.ListItem>
-                            <Ons.ListItem tappable onClick={() => {this.closeMenu(); this.saveDataToNapchart()}}><Ons.Icon fixedWidth size="25" icon='md-cloud-upload'></Ons.Icon>Save to napchart</Ons.ListItem>
-                            <Ons.ListItem tappable onClick={() => {this.closeMenu(); this.shareNapChartUrl()}}><Ons.Icon fixedWidth size="25" icon='md-share'></Ons.Icon>Share</Ons.ListItem>
-                            <Ons.ListItem tappable onClick={() => {this.closeMenu(); this.clearChartData()}}><Ons.Icon fixedWidth size="25" icon='md-spinner'></Ons.Icon>Clear</Ons.ListItem>
-                            <Ons.ListItem tappable onClick={() => {this.showSettingDialog(); this.closeMenu(); }}><Ons.Icon fixedWidth size="25" icon='md-settings'></Ons.Icon>Setting</Ons.ListItem>
-                            <Ons.ListItem tappable onClick={() => {this.showAboutDialog(); this.closeMenu();}}><Ons.Icon fixedWidth size="25" icon='md-make'></Ons.Icon>About</Ons.ListItem>
+                            <Ons.ListItem tappable onClick={() => {this.closeMenu(); this.loadFromNapChart()}}><Ons.Icon fixedWidth size={25} icon='md-cloud-download'></Ons.Icon>Load from napchart</Ons.ListItem>
+                            <Ons.ListItem tappable onClick={() => {this.closeMenu(); this.saveDataToNapchart()}}><Ons.Icon fixedWidth size={25} icon='md-cloud-upload'></Ons.Icon>Save to napchart</Ons.ListItem>
+                            <Ons.ListItem tappable onClick={() => {this.closeMenu(); this.shareNapChartUrl()}}><Ons.Icon fixedWidth size={25} icon='md-share'></Ons.Icon>Share napchart link</Ons.ListItem>
+                            <Ons.ListItem tappable onClick={() => {this.closeMenu(); this.saveSchedule()}}><Ons.Icon fixedWidth size={25} icon='md-floppy'></Ons.Icon>Save</Ons.ListItem>
+                            <Ons.ListItem tappable onClick={() => {this.closeMenu(); this.shareChart()}}><Ons.Icon fixedWidth size={25} icon='md-share'></Ons.Icon>Share chart</Ons.ListItem>
+                            <Ons.ListItem tappable onClick={() => {this.closeMenu(); this.clearChartData()}}><Ons.Icon fixedWidth size={25} icon='md-spinner'></Ons.Icon>Clear</Ons.ListItem>
+                            <Ons.ListItem tappable onClick={() => {this.showSettingDialog(); this.closeMenu(); }}><Ons.Icon fixedWidth size={25} icon='md-settings'></Ons.Icon>Setting</Ons.ListItem>
+                            <Ons.ListItem tappable onClick={() => {this.showAboutDialog(); this.closeMenu();}}><Ons.Icon fixedWidth size={25} icon='md-make'></Ons.Icon>About</Ons.ListItem>
                         </Ons.List>
                     </Ons.Page>
                 </Ons.SplitterSide>
                 <Ons.SplitterContent>
                     <Ons.Page
                         renderToolbar={this.renderToolbar}
-                        renderBottomToolbar={this.renderBottomToolbar}>
+                        renderBottomToolbar={this.renderBottomToolbar}
+                        renderModal={this.renderLoadingModal}>
                         {this.renderSettingDialog()}
                         {this.renderNapchartUrlDialog()}
                         {this.renderAboutDialog()}
                         <Chart
                             ref="chart"
+                            setCanvas={this.setCanvas}
                             napchart={this.state.napchart}
                             onUpdate={this.somethingUpdate}
                             setGlobalNapchart={this.setGlobalNapchart}
@@ -406,6 +469,9 @@ export default class Editor extends Component {
 
     somethingUpdate = (napchart) => {
         this.forceUpdate()
+        this.setState({
+            isNapchartUpdated: false
+        })
     }
 
 
@@ -448,18 +514,34 @@ export default class Editor extends Component {
         ons.notification.toast("Save chart data successful", {timeout: 1000});
     };
 
-    setAlarm = () => {
-        console.log(this.state.napchart.data.elements);
-        let sucess = () => {
-            console.log("success");
-        };
-        let fail = () => {
-            console.log("fall");
-        };
-        this.state.napchart.data.elements.forEach(element => {
-            cordova.exec(sucess, fail, 'setalarm', 'coolMethod', [Math.floor(element.start / 60), element.start % 60]);
-            cordova.exec(sucess, fail, 'setalarm', 'coolMethod', [Math.floor(element.end / 60), element.end % 60]);
-        });
+    // setAlarm = () => {
+    //     console.log(this.state.napchart.data.elements);
+    //     let sucess = () => {
+    //         console.log("success");
+    //     };
+    //     let fail = () => {
+    //         console.log("fall");
+    //     };
+    //     this.state.napchart.data.elements.forEach(element => {
+    //         cordova.exec(sucess, fail, 'setalarm', 'coolMethod', [Math.floor(element.start / 60), element.start % 60]);
+    //         cordova.exec(sucess, fail, 'setalarm', 'coolMethod', [Math.floor(element.end / 60), element.end % 60]);
+    //     });
+    // }
+
+    shareChart = () => {
+        var dt = this.state.canvas.toDataURL();
+        var link = dt.replace(/^data:image\/[^;]/, 'data:application/octet-stream');
+        window.plugins.socialsharing.share(null, null, dt);
     }
 
+    setCanvas = (canvas) => {
+        this.setState({
+            canvas:  canvas
+        })
+    }
+
+    checkConnection = () => {
+        var networkState = navigator.connection.type;
+        return networkState !== Connection.NONE;
+    }
 }

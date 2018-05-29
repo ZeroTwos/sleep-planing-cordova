@@ -71,6 +71,7 @@ export default class Chart extends Component {
   }
 
     loadChartData = (chartData = {}) => {
+        this.props.setCanvas(this.refs[this.state.id]);
         var canvas = this.refs[this.state.id];
         var ctx = canvas.getContext('2d');
 

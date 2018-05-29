@@ -61,9 +61,7 @@ export default class SelectedElement extends React.Component {
                   <div className="level-item">
                     <button onClick={napchart.deleteElement.bind(napchart, selected)} className="napchartDontLoseFocus button">Delete</button>
                     <button onClick={this.setAlarm.bind(this, element)} className="napchartDontLoseFocus button">Set Alarm</button>
-                    {napchart.isTouchUser &&
                       <button onClick={napchart.forceFocusSelected} className="napchartDontLoseFocus button">Edit text</button>
-                    }
                   </div>
                 </div>
               </div>
@@ -93,7 +91,7 @@ export default class SelectedElement extends React.Component {
   }
 
   changeColor = (color) => {
-    var napchart = this.props.napchart
+    this.props.napchart
     napchart.changeColor(this.props.napchart.selectedElement, color)
     napchart.config.defaultColor = color
     this.forceUpdate()

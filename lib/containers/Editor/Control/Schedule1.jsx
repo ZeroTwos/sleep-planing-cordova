@@ -44,8 +44,8 @@ export default class Schedule extends React.Component {
           />
         </div>
           <Ons.Select style={{width: "100%"}} id="choose-sel" value={this.state.selectedSchedule} modifier={this.state.selectedSchedule} onChange={this.selectSchedule}>
-            {sampleSchedules.map(schedule => {
-              return <option value={schedule.name}>
+            {sampleSchedules.map((schedule, index) => {
+              return <option id={index} value={schedule.name}>
                 <div className="left">
                   <div className="level-item">
                     <span>{schedule.name}</span>
